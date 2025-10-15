@@ -1,0 +1,815 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>AI Invoice Manager</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+      /* Modern Reset & Base Styles */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      body { 
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        line-height: 1.5;
+        color: #1a202c;
+        background: linear-gradient(135deg, #f6f9fc 0%, #f1f5f9 100%);
+        min-height: 100vh;
+        max-width: 1200px; 
+        margin: 0 auto;
+        padding: 2rem;
+      }
+
+      /* Typography */
+      h1, h2, h3 { 
+        color: #1a202c;
+        font-weight: 600;
+        line-height: 1.25;
+      }
+      h1 { font-size: 1.875rem; margin-bottom: 1.5rem; }
+      h2 { font-size: 1.5rem; margin: 2rem 0 1rem; }
+      h3 { font-size: 1.25rem; margin: 1.5rem 0 1rem; }
+
+      /* Cards & Containers */
+      .card { 
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.12), 0 3px 6px -2px rgba(0, 0, 0, 0.07);
+      }
+
+      /* Form Elements */
+      input[type="file"] {
+        background: #f8fafc;
+        padding: 2rem;
+        border: 3px dashed #cbd5e1;
+        border-radius: 16px;
+        width: 100%;
+        margin: 1.5rem 0;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: center;
+      }
+      
+      input[type="file"]:hover {
+        border-color: #3b82f6;
+        background: #f1f5f9;
+      }
+      
+      input[type="file"]::file-selector-button {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        margin-right: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      
+      input[type="file"]::file-selector-button:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+      }
+
+      .preview { 
+        max-width: 320px;
+        margin: 1rem 0;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+
+      /* Code & Pre */
+      pre { 
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: 8px;
+        overflow: auto;
+        font-size: 0.875rem;
+        border: 1px solid #e2e8f0;
+      }
+
+      /* Buttons */
+      .btn { 
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        padding: 0.875rem 1.75rem;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer !important;
+        font-weight: 600;
+        font-size: 0.925rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+        z-index: 10;
+      }
+      .btn:hover { 
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+      }
+      .btn:disabled { 
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+        box-shadow: none;
+      }
+      
+      .btn-success {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2);
+      }
+      
+      .btn-success:hover {
+        background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+        box-shadow: 0 6px 8px -1px rgba(5, 150, 105, 0.3);
+      }
+      
+      /* Loading Animation */
+      .loading {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+        margin-right: 0.5rem;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* Table Styles */
+      .table-container {
+        margin-top: 1.5rem;
+        max-height: 600px;
+        overflow-y: auto;
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 16px;
+        background: white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      
+      .invoice-table { 
+        width: 100%; 
+        border-collapse: separate;
+        border-spacing: 0;
+        margin: 0;
+      }
+
+      .invoice-table th, .invoice-table td { 
+        padding: 1.25rem;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.925rem;
+      }
+      
+      .invoice-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.75rem;
+        color: #475569;
+      }
+
+      .invoice-table th { 
+        background: white;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      }
+
+      .invoice-table td { vertical-align: middle; }
+      .invoice-table tr:last-child td { border-bottom: none; }
+      .invoice-table tr:hover { background: #f8fafc; }
+      
+      /* Status Badges */
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1.5;
+      }
+      .status-success { 
+        background: #dcfce7;
+        color: #166534;
+      }
+      .status-error { 
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      /* Result Sections */
+      .result-card {
+        background: white;
+        margin-top: 1.5rem;
+      }
+
+      .result-section {
+        padding: 1.25rem;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .result-section:last-child {
+        border-bottom: none;
+      }
+
+      .result-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+      }
+
+      .result-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #2d3748;
+      }
+
+      .result-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        background: #e2e8f0;
+        color: #4a5568;
+      }
+
+      .result-content {
+        background: #f8fafc;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .mono-text {
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin: 0;
+        padding: 1rem;
+        background: transparent;
+        border: none;
+        white-space: pre-wrap;
+      }
+
+      .json-view {
+        color: #2d3748;
+      }
+
+      #id-badge {
+        background: #c6f6d5;
+        color: #22543d;
+      }
+
+      /* Modal Styles */
+      #invoiceModal {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+      }
+
+      #invoiceModal.visible {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      #invoiceModal > div {
+        background: white;
+        margin: 5vh auto;
+        padding: 2rem;
+        width: 90%;
+        max-width: 800px;
+        border-radius: 12px;
+        position: relative;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-close {
+        position: absolute;
+        right: 1.5rem;
+        top: 1.5rem;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+      }
+
+      .modal-close:hover {
+        background: #f8fafc;
+      }
+
+      /* Success Message */
+      .success-message {
+        background: #dcfce7;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        display: none;
+      }
+      
+      .error-message {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+        display: none;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        body { padding: 1rem; }
+        .card { padding: 1rem; }
+        .invoice-table th, .invoice-table td { padding: 0.75rem; font-size: 0.75rem; }
+        #invoiceModal > div { 
+          width: 95%;
+          margin: 2.5vh auto;
+          padding: 1rem;
+        }
+        h1 { font-size: 2rem !important; }
+        .btn { padding: 0.75rem 1.25rem; font-size: 0.825rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header Section -->
+    <header style="text-align: center; margin-bottom: 3rem;">
+      <h1 style="display: flex; align-items: center; justify-content: center; gap: 1rem; font-size: 2.5rem; color: #1e293b; margin-bottom: 0.5rem;">
+        <i class="fas fa-file-invoice" style="color: #3b82f6;"></i>
+        AI Invoice Manager
+      </h1>
+      <p style="color: #64748b; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+        Intelligent invoice processing with OCR and AI-powered data extraction
+      </p>
+    </header>
+
+    <!-- Upload Section -->
+    <div class="card">
+      <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+        <i class="fas fa-cloud-upload-alt" style="color: #3b82f6; font-size: 1.5rem;"></i>
+        <h2 style="margin: 0; color: #1e293b;">Upload Invoice</h2>
+      </div>
+      <p style="color: #64748b; margin-bottom: 1.5rem;">
+        Select an invoice image to automatically extract and process invoice data using AI
+      </p>
+      <div style="position: relative;">
+        <input id="fileInput" type="file" accept="image/*" multiple />
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; color: #64748b;">
+          <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; text-align: center;"></i>
+          <span>Drag & drop invoice images here or click to browse</span>
+        </div>
+      </div>
+      <div id="previewContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin: 1rem 0;"></div>
+      <div id="uploadProgress" style="margin: 1rem 0; display: none;">
+        <div style="background: #f1f5f9; border-radius: 8px; padding: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span id="progressText">Processing files...</span>
+            <span id="progressCount">0/0</span>
+          </div>
+          <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+            <div id="progressBar" style="background: #3b82f6; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+        <div id="processingResults" style="margin-top: 1rem;"></div>
+      </div>
+      <button id="uploadBtn" class="btn" type="button" style="position: relative; z-index: 100; pointer-events: auto;" onclick="alert('Button clicked!')">
+        <i class="fas fa-upload" style="margin-right: 0.5rem;"></i>
+        Process Invoices
+      </button>
+    </div>
+
+    <!-- Invoices Management Section -->
+    <div class="card">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <i class="fas fa-table" style="color: #3b82f6; font-size: 1.5rem;"></i>
+          <h2 style="margin: 0; color: #1e293b;">Invoice Database</h2>
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button id="viewAllBtn" class="btn" style="position: relative; z-index: 100; pointer-events: auto;">
+            <i class="fas fa-eye" style="margin-right: 0.5rem;"></i>
+            View All Invoices
+          </button>
+          <button id="downloadCsvBtn" class="btn" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); box-shadow: 0 4px 6px -1px rgba(5, 150, 105, 0.2); position: relative; z-index: 100; pointer-events: auto;">
+            <i class="fas fa-download" style="margin-right: 0.5rem;"></i>
+            Download CSV
+          </button>
+        </div>
+      </div>
+      <div class="table-container">
+        <table class="invoice-table" id="invoiceTable" style="display: none;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Vendor</th>
+              <th>Invoice #</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="invoiceTableBody">
+          </tbody>
+        </table>
+        <div id="noInvoicesMsg" style="padding: 20px; text-align: center; display: none;">
+          No invoices found.
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice Details Modal -->
+    <div id="invoiceModal">
+      <div>
+        <button onclick="closeModal()" class="modal-close" title="Close">×</button>
+        <h3>Invoice Details</h3>
+        <div id="modalContent"></div>
+      </div>
+    </div>
+
+
+
+    <script>
+      // Utility functions
+      function formatDate(dateStr) {
+        if (!dateStr) return 'N/A';
+        try {
+          return new Date(dateStr).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        } catch (e) {
+          return dateStr || 'N/A';
+        }
+      }
+
+      function showModal(invoice) {
+        const modal = document.getElementById('invoiceModal');
+        const content = document.getElementById('modalContent');
+        
+        // Create a more detailed view of the invoice
+        let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
+        
+        // Vendor Details
+        html += '<div><h4>Vendor Details</h4>';
+        const vendor = invoice.invoice_data['Vendor Details'] || {};
+        html += `<p>Name: ${vendor.Name || 'N/A'}</p>`;
+        html += `<p>Address: ${vendor.Address || 'N/A'}</p>`;
+        html += `<p>Tax Number: ${vendor['Tax Number'] || 'N/A'}</p>`;
+        html += `<p>Phone: ${vendor['Phone Number'] || 'N/A'}</p></div>`;
+        
+        // Invoice Details
+        html += '<div><h4>Invoice Details</h4>';
+        const details = invoice.invoice_data['Invoice Details'] || {};
+        html += `<p>Number: ${details['Invoice Number'] || 'N/A'}</p>`;
+        html += `<p>Date: ${details['Invoice Date'] || 'N/A'}</p>`;
+        html += `<p>Type: ${details['Type of Invoice'] || 'N/A'}</p></div>`;
+        
+        // Invoice Items
+        html += '<div style="grid-column: span 2;"><h4>Items</h4>';
+        html += '<table style="width:100%; border-collapse: collapse;">';
+        html += '<tr><th>Item</th><th>Quantity</th><th>HSN/SAC</th><th>Rate</th></tr>';
+        const items = invoice.invoice_data['Invoice Items'] || [];
+        items.forEach(item => {
+          html += `<tr>
+            <td>${item.Name || 'N/A'}</td>
+            <td>${item.Quantity || 'N/A'}</td>
+            <td>${item.HSN_SAC_code || 'N/A'}</td>
+            <td>${item.Rate || 'N/A'}</td>
+          </tr>`;
+        });
+        html += '</table></div>';
+        
+        // Overall Details
+        const overall = invoice.invoice_data['Overall'] || {};
+        html += `<div style="grid-column: span 2;">
+          <h4>Overall</h4>
+          <p>Total Value: ${overall['Total Invoice Value'] || 'N/A'}</p>
+          <p>GST Value: ${overall['GST Value'] || 'N/A'}</p>
+        </div>`;
+        
+        html += '</div>';
+        content.innerHTML = html;
+        modal.classList.add('visible');
+      }
+
+      function closeModal() {
+        const modal = document.getElementById('invoiceModal');
+        modal.classList.remove('visible');
+      }
+
+      // Close modal when clicking outside
+      window.onclick = function(event) {
+        const modal = document.getElementById('invoiceModal');
+        if (event.target === modal) {
+          closeModal();
+        }
+      }
+
+      // Main form elements
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM fully loaded');
+        
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const progressCount = document.getElementById('progressCount');
+        const processingResults = document.getElementById('processingResults');
+
+      fileInput.addEventListener('change', () => {
+        previewContainer.innerHTML = '';
+        Array.from(fileInput.files).forEach((file, index) => {
+          const wrapper = document.createElement('div');
+          wrapper.style.position = 'relative';
+          wrapper.className = 'preview-wrapper';
+          
+          const img = document.createElement('img');
+          img.className = 'preview';
+          img.src = URL.createObjectURL(file);
+          img.style.width = '100%';
+          img.style.height = '150px';
+          img.style.objectFit = 'cover';
+          
+          const label = document.createElement('div');
+          label.style.position = 'absolute';
+          label.style.bottom = '0';
+          label.style.left = '0';
+          label.style.right = '0';
+          label.style.background = 'rgba(0,0,0,0.7)';
+          label.style.color = 'white';
+          label.style.padding = '0.5rem';
+          label.style.fontSize = '0.75rem';
+          label.textContent = file.name;
+          
+          wrapper.appendChild(img);
+          wrapper.appendChild(label);
+          previewContainer.appendChild(wrapper);
+        });
+        
+        // Reset the upload button state in case it was disabled
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="fas fa-upload" style="margin-right: 0.5rem;"></i>Process Invoices';
+      });
+
+      uploadBtn.addEventListener('click', async () => {
+        console.log('Upload button clicked');
+        const files = fileInput.files;
+        if (!files.length) { 
+          alert('Please select at least one image'); 
+          return; 
+        }
+        
+        // Temporarily disable to prevent double-clicks
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<div class="loading"></div>Processing...';
+        uploadProgress.style.display = 'block';
+        processingResults.innerHTML = '';
+        
+        const form = new FormData();
+        Array.from(files).forEach(file => {
+          form.append('files', file);
+        });
+        
+        try {
+          const res = await fetch('/api/upload_invoice/', { method: 'POST', body: form });
+          const json = await res.json();
+          
+          if (json.error) {
+            alert('Error: ' + json.error);
+          } else {
+            // Handle parallel task processing
+            const taskIds = json.task_ids;
+            let completedTasks = 0;
+            const totalTasks = taskIds.length;
+            
+            // Update progress indicators
+            progressText.textContent = `Processing ${totalTasks} files in parallel...`;
+            progressCount.textContent = `${completedTasks}/${totalTasks}`;
+            progressBar.style.width = "0%";
+            
+            // Create a status checker for all tasks at once
+            const checkAllStatus = async () => {
+              try {
+                // Build query string with all task IDs
+                const queryParams = taskIds.map(id => `task_id=${id}`).join('&');
+                const statusRes = await fetch(`/api/tasks_status/?${queryParams}`);
+                const statusJson = await statusRes.json();
+                
+                // Update the progress bar based on completed tasks
+                completedTasks = statusJson.progress.completed;
+                const percent = statusJson.progress.percent;
+                
+                progressBar.style.width = `${percent}%`;
+                progressCount.textContent = `${completedTasks}/${totalTasks}`;
+                
+                // Update individual task results
+                processingResults.innerHTML = '';
+                Object.entries(statusJson.tasks).forEach(([taskId, result], index) => {
+                  const fileName = files[index].name;
+                  
+                  const resultDiv = document.createElement('div');
+                  resultDiv.style.padding = '0.75rem';
+                  resultDiv.style.borderBottom = '1px solid #e2e8f0';
+                  
+                  if (result.status === 'completed') {
+                    resultDiv.innerHTML = `
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>${fileName}</span>
+                        <span class="status-badge status-success">Success</span>
+                      </div>
+                    `;
+                  } else if (result.status === 'failed') {
+                    resultDiv.innerHTML = `
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>${fileName}</span>
+                        <span class="status-badge status-error">Failed</span>
+                      </div>
+                      <div style="color: #991b1b; margin-top: 0.5rem; font-size: 0.875rem;">${result.error || 'Unknown error'}</div>
+                    `;
+                  } else {
+                    resultDiv.innerHTML = `
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>${fileName}</span>
+                        <span class="status-badge" style="background: #e2e8f0; color: #4b5563;">Processing</span>
+                      </div>
+                    `;
+                  }
+                  
+                  processingResults.appendChild(resultDiv);
+                });
+                
+                return completedTasks === totalTasks;
+              } catch (err) {
+                console.error('Error checking status:', err);
+                return false;
+              }
+            };
+
+            // Poll for status of all tasks every 2 seconds
+            const pollInterval = setInterval(async () => {
+              const allDone = await checkAllStatus();
+              if (allDone) {
+                clearInterval(pollInterval);
+                progressText.textContent = "All files processed!";
+              }
+            }, 2000);
+
+            // Show initial summary
+            const summaryDiv = document.createElement('div');
+            summaryDiv.innerHTML = `
+              <div class="status-badge status-success" style="margin-bottom: 1rem;">
+                Files uploaded for processing. Check status below.
+              </div>
+            `;
+            processingResults.appendChild(summaryDiv);
+            
+            // Clear the form
+            fileInput.value = '';
+            previewContainer.innerHTML = '';
+          }
+        } catch (err) {
+          alert('Error: ' + err.toString());
+        } finally {
+          // Re-enable the upload button immediately to make it clickable
+          uploadBtn.disabled = false;
+          uploadBtn.innerHTML = '<i class="fas fa-upload" style="margin-right: 0.5rem;"></i>Process Invoices';
+          
+          // For errors, hide progress immediately
+          // Otherwise, the progress will remain visible until tasks complete
+        }
+      });
+      // View All Invoices button logic
+      const viewAllBtn = document.getElementById('viewAllBtn');
+      const invoiceTable = document.getElementById('invoiceTable');
+      const noInvoicesMsg = document.getElementById('noInvoicesMsg');
+      const tableBody = document.getElementById('invoiceTableBody');
+
+      // CSV Download button
+      const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+      downloadCsvBtn.addEventListener('click', async () => {
+        downloadCsvBtn.disabled = true;
+        downloadCsvBtn.innerHTML = '<div class="loading"></div>Downloading...';
+        
+        try {
+          const res = await fetch('/api/download_csv/');
+          if (res.ok) {
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'invoices.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          } else {
+            alert('Failed to download CSV');
+          }
+        } catch (err) {
+          alert('Error downloading CSV: ' + err.toString());
+        } finally {
+          downloadCsvBtn.disabled = false;
+          downloadCsvBtn.innerHTML = '<i class="fas fa-download" style="margin-right: 0.5rem;"></i>Download CSV';
+        }
+      });
+
+      viewAllBtn.addEventListener('click', async () => {
+        viewAllBtn.disabled = true;
+        viewAllBtn.innerHTML = '<div class="loading"></div>Loading...';
+        tableBody.innerHTML = '';
+        invoiceTable.style.display = 'none';
+        noInvoicesMsg.style.display = 'none';
+        
+        try {
+          const res = await fetch('/api/list_invoices/');
+          const json = await res.json();
+          
+          if (json.invoices && json.invoices.length > 0) {
+            json.invoices.forEach(inv => {
+              const tr = document.createElement('tr');
+              const vendor = inv.invoice_data['Vendor Details'] || {};
+              const details = inv.invoice_data['Invoice Details'] || {};
+              const overall = inv.invoice_data['Overall'] || {};
+              
+              const safeInv = {
+                _id: inv._id,
+                processed_at: inv.processed_at,
+                invoice_data: inv.invoice_data || {}
+              };
+              tr.innerHTML = `
+                <td>${formatDate(inv.processed_at)}</td>
+                <td>${vendor.Name || 'N/A'}</td>
+                <td>${details['Invoice Number'] || 'N/A'}</td>
+                <td>${overall['Total Invoice Value'] || 'N/A'}</td>
+                <td>
+                  <span class="status-badge ${inv.error ? 'status-error' : 'status-success'}">
+                    ${inv.error ? 'Error' : 'Success'}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn" onclick='showModal(${JSON.stringify(safeInv)})' style="position: relative; z-index: 100; pointer-events: auto;">
+                    View Details
+                  </button>
+                </td>
+              `;
+              tableBody.appendChild(tr);
+            });
+            invoiceTable.style.display = 'table';
+          } else {
+            noInvoicesMsg.style.display = 'block';
+          }
+        } catch (err) {
+          noInvoicesMsg.textContent = 'Error: ' + err.toString();
+          noInvoicesMsg.style.display = 'block';
+        } finally {
+          viewAllBtn.disabled = false;
+          viewAllBtn.innerHTML = '<i class="fas fa-eye" style="margin-right: 0.5rem;"></i>View All Invoices';
+        }
+      });
+      });
+    </script>
+  </body>
+</html>

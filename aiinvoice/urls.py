@@ -1,0 +1,31 @@
+"""
+URL configuration for aiinvoice project.
+
+The `urlpatterns` list routes URLs to views. For more information please see:
+    https://docs.djangoproject.com/en/5.2/topics/http/urls/
+Examples:
+Function views
+    1. Add an import:  from my_app import views
+    2. Add a URL to urlpatterns:  path('', views.home, name='home')
+Class-based views
+    1. Add an import:  from other_app.views import Home
+    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
+Including another URLconf
+    1. Import the include() function: from django.urls import include, path
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+"""
+
+from django.contrib import admin
+from django.urls import path
+
+from app import views as app_views
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("api/upload_invoice/", app_views.upload_invoice, name="upload_invoice"),
+    path("api/list_invoices/", app_views.list_invoices_api, name="list_invoices_api"),
+    path("api/download_csv/", app_views.download_csv, name="download_csv"),
+    path("api/task_status/<str:task_id>/", app_views.check_task_status, name="check_task_status"),
+    path("api/tasks_status/", app_views.check_all_tasks_status, name="check_all_tasks_status"),
+    path("", app_views.upload_page, name="upload_page"),
+]
