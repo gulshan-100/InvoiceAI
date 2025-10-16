@@ -94,10 +94,7 @@ python manage.py migrate
 
 2. Start the Celery worker:
 ```bash
-# On Windows
-celery -A aiinvoice worker --pool=solo -l info
-# On macOS/Linux
-celery -A aiinvoice worker -l info
+celery -A aiinvoice worker --concurrency=10 --pool=threads -l info
 ```
 
 3. Run the Django development server:
