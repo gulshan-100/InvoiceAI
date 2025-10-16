@@ -1,16 +1,25 @@
 # AI Invoice Manager
 
-A Django application that uses AI-powered OCR and GPT models to extract structured data from invoice images, store it in MongoDB, and allow easy viewing and download of processed invoice data.
+An AI-powered Django app using the GPT Vision model to extract, validate, and store structured data from invoices in MongoDB, with an interface for easy review.
 
 ## Features
 
-- **AI-powered Invoice Processing**: Leverages OpenAI's GPT-4o model for OCR and text extraction
+- **AI-powered Invoice Processing**: Leverages OpenAI's GPT-4o vision model for text extraction
 - **Parallel Processing**: Uses Celery for asynchronous processing of multiple invoices simultaneously
 - **Structured Data Extraction**: Extracts vendor details, invoice details, line items, and totals
 - **Data Validation**: AI-based validation to detect calculation errors and suspicious invoice data
 - **MongoDB Storage**: Stores all extracted invoice data in MongoDB for easy querying
 - **Modern Web Interface**: Clean, responsive UI for uploading and managing invoices
 - **Export to CSV**: Download all invoice data in CSV format for analysis
+
+## Web Interface
+<img width="1442" height="857" alt="Screenshot 2025-10-16 035850" src="https://github.com/user-attachments/assets/afd9c624-34f3-4607-ad0e-09bac1a36bd6" />
+
+## Database Storage Sample 
+<img width="889" height="512" alt="Screenshot 2025-10-15 145646" src="https://github.com/user-attachments/assets/d3c3fc18-5a94-4424-84eb-2f66c49935cf" />
+
+##  Demo Video
+https://github.com/user-attachments/assets/8e7a13d3-afbf-407a-af89-fc62290e87ba
 
 ## Technology Stack
 
@@ -27,7 +36,7 @@ The application follows a modern architecture:
 1. **Web Interface**: Allows uploading one or more invoice images
 2. **Asynchronous Processing**: Delegates heavy processing to Celery workers
 3. **AI Pipeline**:
-   - OCR text extraction from invoice images
+   - Gpt-4o vision model extract the text from invoice images
    - Structured data parsing from raw text
    - Invoice data validation
 4. **Storage**: MongoDB for document storage
@@ -35,8 +44,8 @@ The application follows a modern architecture:
 
 ## Prerequisites
 
-- Python 3.8+
-- Redis server
+- Python 
+- Redis DB
 - MongoDB server
 - OpenAI API key
 
@@ -56,8 +65,8 @@ MONGO_COLLECTION=invoices  # optional, default: invoices
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/gulshan100/aiinvoice.git
-cd aiinvoice
+git clone https://github.com/gulshan-100/InvoiceAI.git
+cd InvoiceAI
 ```
 
 2. Create and activate a virtual environment:
@@ -98,32 +107,6 @@ python manage.py runserver
 
 4. Open your browser and navigate to `http://127.0.0.1:8000/`
 
-## API Endpoints
-
-- `POST /api/upload_invoice/`: Upload one or more invoice images for processing
-- `GET /api/list_invoices/`: List all processed invoices
-- `GET /api/download_csv/`: Download all invoice data as CSV
-- `GET /api/task_status/<task_id>/`: Check status of a specific processing task
-- `GET /api/tasks_status/?task_id=<id1>&task_id=<id2>`: Check status of multiple processing tasks
-
-## Project Structure
-
-```
-aiinvoice/           # Django project folder
-  ├── settings.py    # Project settings
-  ├── urls.py        # URL routing
-  ├── celery.py      # Celery configuration
-  └── ...
-app/                 # Django app folder
-  ├── views.py       # API endpoints and views
-  ├── tasks.py       # Celery tasks
-  ├── models.py      # Django models
-  ├── utils/         # Utility modules
-  │   ├── invoice_processor.py  # AI processing pipeline
-  │   └── store_database.py     # MongoDB interface
-  └── templates/     # Frontend templates
-      └── upload.html           # Main interface
-```
 
 ## Example Usage
 
@@ -132,11 +115,3 @@ app/                 # Django app folder
 3. Wait for processing to complete (progress is shown in real-time)
 4. View the structured data extracted from invoices
 5. Download all processed data as CSV for further analysis
-
-## License
-
-[Your License Here]
-
-## Contributing
-
-[Your Contribution Guidelines Here]
